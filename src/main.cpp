@@ -8,6 +8,7 @@
 #include <utility>
 #include <algorithm>
 #include <cstdbool> 
+#include <vector>
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -20,6 +21,17 @@ size_t findi(string data, string toSearch, size_t pos = 0)
 	std::transform(toSearch.begin(), toSearch.end(), toSearch.begin(), ::tolower);
 	// Find sub string in given string
 	return data.find(toSearch, pos);
+}
+//Function to find how many times a substring appear within a string
+int count (const string s, const string target) {
+	int 			occurrences = 0;
+	string::size_type 	pos = 0;
+
+	while ((pos = s.find(target, pos )) != std::string::npos) {
+		++ occurrences;
+		pos += target.length();
+	}
+	return occurrences;
 }
 //Function to split a string using a char delimiter
 vector<string> explode(const string& str, const string& delim)
@@ -70,37 +82,75 @@ map<string,string> getData() {
 	}
 	return dataset;
 }
+void viewContent(string content){
+	int			i;
+	istringstream 		stream(content);
+	string 			line, cont;
+	i	=	0;
+	while (getline(stream,line)) {
+		i++;
+		cout << line << endl;
+		if (i == 20)
+			break;
+	}
+}
+
 //Main function
 int main() {
-	int qtime, occr;
-	string query, line;
-	map <string,string> dataset;
+	int 		total_occr, occr, res, i;
+	float 		qtime;
+	string 		query, linex, more, realTitle;
+	map 		<string,string> dataset;
+	clock_t 	begin_t, end_t;
 	
-	cout << "Loading index..." 	<< endl;
+	printf("\033c");
+	cout << "...loading index" << flush;
 	dataset = getData();
+	cout << ", done!" << endl;
 	while (true) {
-		occr	=	0;
+		occr	=	res	=	i	=	total_occr	=	0;
+		//Multimap usado pois permite keys repetidas
+		//Parametro greater para ordenar desc
+		multimap <int,string, greater<int>> 	results;
+		map	 <string, string>		rank;
 		cout << "Insert your query: ";
 		getline(cin,query);
 
-		const clock_t begin_time = clock();	
-		
-		for( auto const& [key, val] : dataset ){
-			if (key.find(query) != -1) {
-
+		begin_t = clock();	
+		for( auto const& [title, content] : dataset ){
+			occr		=	count(content, query);	
+			if (occr != 0) {
+				results.insert(make_pair(occr,title));
+				total_occr			+=	occr;
 			}
-
-		//	if (findi(val, query) != -1) {
-		//		occr++;
-		//	}
-
-			if (val.find(query) != -1) {
-				occr++;
-			}
-
-
 		}
-		cout << occr << " results ("<< float( clock () - begin_time ) /  CLOCKS_PER_SEC << "s)" << endl;
+
+		end_t = clock();
+		qtime = ( float(end_t - begin_t) / CLOCKS_PER_SEC );
+		cout << "...About " << total_occr << " results (" << qtime << " seconds)" << endl;
+		//ELECAR OS RESULTADOS
+		for(auto [occr,title] : results) {
+			i++;
+			rank[to_string(i)] = title;
+
+			cout << "[" << i << "] " << title << endl; 
+			if (i%20 == 0){
+				cout << "Do you want to open any result [n or result number]?  ";
+				getline(cin,more);	
+				
+				if (more == "n"){
+					printf("\033c");
+					continue;
+				}
+				else{
+					realTitle	=	rank[more];
+
+					cout << realTitle << endl;
+					viewContent(dataset[realTitle]);
+					break;
+				}
+			}
+		}
 	}
 	return 0;
 }
