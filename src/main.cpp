@@ -13,25 +13,13 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-size_t findi(string data, string toSearch, size_t pos = 0)
-{
-	//Convert complete given String to lower case
-	std::transform(data.begin(), data.end(), data.begin(), ::tolower);
-	// Convert complete given Sub String to lower case
-	std::transform(toSearch.begin(), toSearch.end(), toSearch.begin(), ::tolower);
-	// Find sub string in given string
-	return data.find(toSearch, pos);
-}
-//Function to find how many times a substring appear within a string
-int count (const string s, const string target) {
-	int 			occurrences = 0;
-	string::size_type 	pos = 0;
+bool findString(const std::string & strHaystack, const std::string & strNeedle){
+	  auto it = std::search(
+			      strHaystack.begin(), strHaystack.end(),
+			      strNeedle.begin(),   strNeedle.end(),
+			      [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); } );
 
-	while ((pos = s.find(target, pos )) != std::string::npos) {
-		++ occurrences;
-		pos += target.length();
-	}
-	return occurrences;
+	    return (it != strHaystack.end() );
 }
 //Function to split a string using a char delimiter
 vector<string> explode(const string& str, const string& delim)
@@ -102,34 +90,34 @@ int main() {
 	string 		query, linex, more, realTitle;
 	map 		<string,string> dataset;
 	clock_t 	begin_t, end_t;
-	
+
 	printf("\033c");
 	cout << "...loading index" << flush;
 	dataset = getData();
 	cout << ", done!" << endl;
 	while (true) {
-		occr	=	res	=	i	=	total_occr	=	0;
-		//Multimap usado pois permite keys repetidas
-		//Parametro greater para ordenar desc
-		multimap <int,string, greater<int>> 	results;
-		map	 <string, string>		rank;
+		occr	=	i	=	0;
+		map <string,string> 	results;
+		map <string,string>	rank;
+
 		cout << "Insert your query: ";
 		getline(cin,query);
 
 		begin_t = clock();	
 		for( auto const& [title, content] : dataset ){
-			occr		=	count(content, query);	
-			if (occr != 0) {
-				results.insert(make_pair(occr,title));
-				total_occr			+=	occr;
+			if (findString(content, query) == true) {
+				occr++;
+			}
+			if (findString(title, query) == true) {
+				results[title];
 			}
 		}
 
 		end_t = clock();
 		qtime = ( float(end_t - begin_t) / CLOCKS_PER_SEC );
-		cout << "...About " << total_occr << " results (" << qtime << " seconds)" << endl;
-		//ELECAR OS RESULTADOS
-		for(auto [occr,title] : results) {
+		cout << "...About " << occr << " results (" << qtime << " seconds)" << endl;
+
+		for(auto [title, foo] : results) {
 			i++;
 			rank[to_string(i)] = title;
 
@@ -151,6 +139,13 @@ int main() {
 				}
 			}
 		}
+		
+		cout << "Do you want do a new search(y/n)?  ";
+		getline(cin,more);
+		if (more == "n")
+			break;
+		
+		printf("\033c");
 	}
 	return 0;
 }
