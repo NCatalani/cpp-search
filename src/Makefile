@@ -1,5 +1,5 @@
-CC = g++
-CFLAGS  = -std=c++17
+CC = g++-9
+CFLAGS  = --std=c++17  
 TARGET = engine
 
 all: $(TARGET)
